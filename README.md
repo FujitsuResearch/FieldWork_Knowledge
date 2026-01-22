@@ -63,7 +63,13 @@ pip install -r requirements.txt
 
 ### Environment Variables
 
-Create a `.env` file in the project root (same level as `README.md`) with the following variables:
+Copy `.env.sample` to `.env` and edit the values:
+
+```bash
+cp .env.sample .env
+```
+
+Edit the `.env` file with the following variables:
 
 ```bash
 OPENAI_API_KEY=your-openai-api-key
@@ -97,7 +103,7 @@ Once the import finishes, your Neo4j instance will host the knowledge graph.
 
 ### Demo 1: Knowledge Graph QA (`kg_rag.py`)
 
-This demo connects to Neo4j, builds a `GraphCypherQAChain`, and answers natural language questions based on the knowledge graph data.
+This demo connects to Neo4j and answers natural language questions based on the knowledge graph data using LLM.
 
 1. Edit `script/run_kg_rag.sh` to set your query:
 
@@ -121,6 +127,8 @@ python3 kg_rag.py --query "What is the person in the video doing?"
 ### Demo 2: Episode Retriever (`episode_retriever.py`)
 
 This demo searches for relevant video episodes from the knowledge graph based on user queries. It uses LLM to score the relevance of each episode and outputs the results as time ranges (e.g., "10.0s - 20.0s").
+
+**Use Case**: The retrieved time ranges can be used to extract specific video segments for further analysis. For example, you can extract only the relevant video clips and use them as input to a Video-LLM for more detailed analysis or question answering.
 
 1. Edit `script/run_episode_retriever.sh` to set your parameters:
 
