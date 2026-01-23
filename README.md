@@ -84,6 +84,59 @@ Make sure a Neo4j instance is running before proceeding.
 
 Before running the demos, you need to import a GraphML file into Neo4j.
 
+> [!IMPORTANT]
+> **GraphML files must be placed in Neo4j's import directory.**
+>
+> Due to Neo4j's security settings, the APOC import function can only access files within the designated import directory. Files placed elsewhere will not be accessible.
+>
+> **How to find the import directory:**
+>
+> 1. Check the `dbms.directories.import` setting in your Neo4j configuration:
+>    ```bash
+>    grep "dbms.directories.import" /etc/neo4j/neo4j.conf
+>    ```
+> 2. If not explicitly set, the default location is:
+>    - **Linux**: `/var/lib/neo4j/import/`
+>    - **macOS (Homebrew)**: `/usr/local/var/neo4j/import/`
+>    - **Docker**: `/var/lib/neo4j/import/` (inside the container)
+>
+> **Example:**
+> ```bash
+> # Copy your GraphML file to the import directory
+> sudo cp /path/to/your/graph.graphml /var/lib/neo4j/import/
+>
+> # Then set FILE_PATH in run_import.sh as:
+> FILE_PATH="graph.graphml"  # Use relative path from import directory
+> ```
+
+> [!TIP]
+> **Alternative: Allow arbitrary file paths via APOC configuration**
+>
+> If you prefer to import files from any location without copying them to the import directory, you can modify the APOC settings:
+>
+> 1. Create or edit `/etc/neo4j/apoc.conf` and add the following lines:
+>    ```
+>    apoc.import.file.enabled=true
+>    apoc.import.file.use_neo4j_config=false
+>    ```
+>
+> 2. Also ensure the following is set in `/etc/neo4j/neo4j.conf`:
+>    ```
+>    dbms.security.allow_csv_import_from_file_urls=true
+>    ```
+>
+> 3. Restart Neo4j for the changes to take effect:
+>    ```bash
+>    sudo systemctl restart neo4j
+>    ```
+>
+> After this configuration, you can use absolute paths directly in `run_import.sh`:
+> ```bash
+> FILE_PATH="/path/to/your/graph.graphml"
+> ```
+>
+> ⚠️ **Security Warning**: This configuration allows Neo4j to access any file on the system. Use with caution in production environments.
+
 1. Clear the existing Neo4j database:
 
 ```bash
