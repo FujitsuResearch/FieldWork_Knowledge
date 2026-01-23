@@ -45,7 +45,7 @@ After editing the configuration, restart Neo4j for the changes to take effect.
 
 ```bash
 git clone <your-repo-url>
-cd fwa_dkg
+cd FieldWork_Knowledge
 ```
 
 2. (Recommended) Create and activate a virtual environment:
