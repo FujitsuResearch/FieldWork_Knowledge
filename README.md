@@ -11,7 +11,7 @@ The system provides two main functionalities:
 Use this as a reference or starting point for your own KG + RAG experiments.
 
 The Knowledge Graph data can be obtained from the following link:  
-<https://huggingface.co/datasets/Fujitsu/FieldWork_Knowledge>
+<https://huggingface.co/datasets/Fujitsu/FieldWork_Knowledge_Dataset>
 
 ## Update
 
