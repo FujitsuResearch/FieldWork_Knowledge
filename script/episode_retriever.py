@@ -382,15 +382,17 @@ def import_graph(file_path: str, neo4j_uri: str, neo4j_user: str, neo4j_password
     Import a GraphML file into Neo4j
     
     Args:
-        file_path: Path to the GraphML file
+        file_path: Path to the GraphML file (as seen by Neo4j, relative to import dir)
         neo4j_uri: Neo4j URI
         neo4j_user: Neo4j username
         neo4j_password: Neo4j password
         clear_db: Whether to clear the database before importing
     """
+    # Note: In Docker environments, the file exists in the container's import directory,
+    # not necessarily on the local filesystem. We skip the local check and let Neo4j handle it.
     if not os.path.exists(file_path):
-        print(f"Error: The file {file_path} does not exist.")
-        return False
+        print(f"Warning: The file {file_path} does not exist locally.")
+        print("Proceeding anyway - file may exist in Neo4j's import directory.")
     
     db_controller = Neo4jDBController(neo4j_uri, neo4j_user, neo4j_password)
     

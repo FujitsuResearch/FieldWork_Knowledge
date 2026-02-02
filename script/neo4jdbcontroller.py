@@ -11,9 +11,15 @@ class Neo4jDBController:
     def close(self):
         self.driver.close()
 
-    def import_graphml(self, file_path):
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"The file {file_path} does not exist.")
+    def import_graphml(self, file_path, check_local_path=None):
+        """Import a GraphML file into Neo4j.
+        
+        Args:
+            file_path: Path to the GraphML file as seen by Neo4j (inside container's import dir)
+            check_local_path: Optional local path to check file existence before import
+        """
+        if check_local_path and not os.path.exists(check_local_path):
+            raise FileNotFoundError(f"The file {check_local_path} does not exist.")
 
         with self.driver.session() as session:
             session.write_transaction(self._load_graphml, file_path)
