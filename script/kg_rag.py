@@ -1,8 +1,77 @@
 import os
+import re
 import argparse
 from langchain_neo4j import Neo4jGraph, GraphCypherQAChain
 from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
+
+
+# カスタムCypher生成プロンプト（バリデーション強化）
+CYPHER_GENERATION_TEMPLATE = """Task: Generate a Cypher statement to query a graph database.
+Instructions:
+- Use only the provided relationship types and properties in the schema.
+- Do not use any other relationship types or properties that are not provided.
+- IMPORTANT: You MUST respond with ONLY a valid Cypher query. Do NOT include any explanation, apology, or natural language text.
+- If you cannot generate a valid Cypher query, respond with: MATCH (n) RETURN 'Unable to generate query for this question' AS message LIMIT 1
+- The query must start with one of: MATCH, OPTIONAL, WITH, UNWIND, CALL, CREATE, MERGE, RETURN
+
+Schema:
+{schema}
+
+Question: {question}
+
+Cypher query:"""
+
+CYPHER_GENERATION_PROMPT = PromptTemplate(
+    input_variables=["schema", "question"],
+    template=CYPHER_GENERATION_TEMPLATE
+)
+
+# 有効なCypherクエリの開始キーワード
+VALID_CYPHER_KEYWORDS = (
+    'MATCH', 'OPTIONAL', 'WITH', 'UNWIND', 'CALL', 'CREATE', 
+    'MERGE', 'RETURN', 'LOAD', 'FOREACH', 'DETACH', 'DELETE',
+    'SET', 'REMOVE', 'USE', 'USING'
+)
+
+
+def validate_cypher_query(cypher: str) -> tuple[bool, str]:
+    """
+    生成されたCypherクエリが有効かどうかをバリデーション
+    
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    if not cypher or not cypher.strip():
+        return False, "Empty Cypher query generated"
+    
+    # 先頭の空白を除去して大文字に変換
+    cypher_upper = cypher.strip().upper()
+    
+    # 有効なCypherキーワードで始まるかチェック
+    if not any(cypher_upper.startswith(keyword) for keyword in VALID_CYPHER_KEYWORDS):
+        return False, f"Invalid Cypher: Query does not start with a valid Cypher keyword. Generated: {cypher[:100]}..."
+    
+    # 自然言語パターンの検出（AIが説明文を返した場合）
+    natural_language_patterns = [
+        r'^as an ai',
+        r'^i cannot',
+        r'^i can\'t',
+        r'^unfortunately',
+        r'^sorry',
+        r'^i\'m unable',
+        r'^this question',
+        r'^the question',
+        r'^based on',
+    ]
+    
+    cypher_lower = cypher.strip().lower()
+    for pattern in natural_language_patterns:
+        if re.match(pattern, cypher_lower):
+            return False, f"LLM returned natural language instead of Cypher query"
+    
+    return True, ""
 
 
 def arg_parser():
@@ -64,6 +133,8 @@ def main(query):
         top_k=10,
         return_direct=False,
         allow_dangerous_requests=True,
+        validate_cypher=True,  # LangChain組み込みのCypherバリデーション
+        cypher_prompt=CYPHER_GENERATION_PROMPT,  # カスタムプロンプト
     )
     
     # Execute the query
@@ -80,7 +151,27 @@ def main(query):
         print(f"\nAnswer: {response.get('result', 'No result')}")
         
     except Exception as e:
-        print(f"Error executing query: {e}")
+        error_str = str(e)
+        
+        # Cypherシンタックスエラーの特別処理
+        if "SyntaxError" in error_str:
+            print("\n" + "=" * 80)
+            print("ERROR: Invalid Cypher Query Generated")
+            print("=" * 80)
+            print("The LLM failed to generate a valid Cypher query.")
+            print("This may happen when:")
+            print("  - The question cannot be answered using the graph schema")
+            print("  - The LLM returned natural language instead of Cypher")
+            print("  - The graph schema doesn't contain relevant information")
+            print("\nPlease try rephrasing your question or check the graph schema.")
+            
+            # スキーマ情報を表示
+            print("\nAvailable graph schema:")
+            print("-" * 40)
+            print(graph.schema)
+        else:
+            print(f"Error executing query: {e}")
+        
         return
 
 
