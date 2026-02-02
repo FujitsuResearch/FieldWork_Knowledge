@@ -1,0 +1,27 @@
+services:
+  neo4j:
+    image: neo4j:5.15.0
+    container_name: fieldwork-neo4j
+    ports:
+      - "${HOST_NEO4J_HTTP_PORT:-7588}:7474"  # HTTP
+      - "${HOST_NEO4J_PORT:-7488}:7687"       # Bolt
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_auth__minimum__password__length=6
+      # APOC settings for GraphML import
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      # Mount dataset directories individually to preserve host file ownership
+      # Add new entries here when adding new datasets
+      - ./neo4j_import/FieldWork_Knowledge_Dataset:/var/lib/neo4j/import/FieldWork_Knowledge_Dataset
+    restart: unless-stopped
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
