@@ -1,2 +1,8 @@
 __pycache__/
 .env
+.venv/
+
+# Neo4j import directory (keep folder structure, ignore large data files)
+neo4j_import/*
+!neo4j_import/.gitkeep
+neo4j_import/FieldWork_Knowledge_Dataset/

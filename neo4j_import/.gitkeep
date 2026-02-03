@@ -1,0 +1,8 @@
+# This directory is mounted to Neo4j container's import directory.
+#
+# To download the Knowledge Graph Dataset:
+#   cd neo4j_import
+#   git lfs install
+#   git clone https://huggingface.co/datasets/Fujitsu/FieldWork_Knowledge_Dataset
+#
+# Then run: bash script/run_import.sh
