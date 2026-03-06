@@ -37,7 +37,7 @@ multidict==6.7.0
 mypy_extensions==1.1.0
 neo4j==5.28.2
 neo4j-graphrag==1.11.0
-numpy==2.4.0
+numpy>=2.2.6
 openai==2.14.0
 orjson==3.11.5
 ormsgpack==1.12.1

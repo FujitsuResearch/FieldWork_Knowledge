@@ -17,9 +17,7 @@ services:
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
-      # Mount dataset directories individually to preserve host file ownership
-      # Add new entries here when adding new datasets
-      - ./neo4j_import/FieldWork_Knowledge_Dataset:/var/lib/neo4j/import/FieldWork_Knowledge_Dataset
+      - ./neo4j_import:/var/lib/neo4j/import
     restart: unless-stopped
 
 volumes:
